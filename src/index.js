@@ -56,7 +56,7 @@ const createDungeonLevel = ({
     height: grid.map.height,
   });
 
-  times(0, () => {
+  times(10, () => {
     world.createPrefab('Goblin').add(Position, getOpenTiles(dungeon));
   });
 
@@ -100,7 +100,6 @@ export const goToDungeonLevel = (level) => {
   const floor = readCache('floors')[level];
 
   addCache('z', level);
-  const oldPos = player.position;
   player.remove(player.position);
 
   let newPosition = goingUp ? floor?.stairsDown : floor?.stairsUp;

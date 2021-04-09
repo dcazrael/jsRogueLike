@@ -14,6 +14,7 @@ export {
   IsOpaque,
   IsPickup,
   IsRevealed,
+  IsStairs,
 } from './Status';
 export { Frozen, Paralyzed, Poisoned } from './StatusEffects';
 export { RequiresTarget, Target, TargetingItem } from './Targeting';

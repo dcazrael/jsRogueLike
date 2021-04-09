@@ -24,7 +24,7 @@ const attack = (entity, target) => {
     );
   }
   addLog(
-    `${entity.description.name} kicked a ${target.description.name} for ${damage} damage!`
+    `${entity.description.name} kicked ${target.description.name} for ${damage} damage!`
   );
 };
 

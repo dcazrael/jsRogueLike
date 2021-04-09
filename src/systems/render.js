@@ -94,25 +94,15 @@ const renderPlayerHud = (player) => {
     y: grid.playerHud.y,
   });
 
+  const goodHealth =
+    player.health.current > player.health.max / 2 ? true : false;
   drawText({
-    text: '♥'.repeat(grid.playerHud.width),
+    text: `${player.health.current}/${player.health.max} HP`,
     background: 'black',
-    color: '#333',
+    color: `${goodHealth ? 'green' : 'red'}`,
     x: grid.playerHud.x,
     y: grid.playerHud.y + 1,
   });
-
-  const hp = player.health.current / player.health.max;
-
-  if (hp > 0) {
-    drawText({
-      text: '♥'.repeat(hp * grid.playerHud.width),
-      background: 'black',
-      color: 'red',
-      x: grid.playerHud.x,
-      y: grid.playerHud.y + 1,
-    });
-  }
 
   drawText({
     text: `Depth: ${Math.abs(readCache('z'))}`,

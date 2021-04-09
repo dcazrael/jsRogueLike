@@ -15,6 +15,7 @@ import {
   IsOpaque,
   IsPickup,
   IsRevealed,
+  IsStairs,
   Layer100,
   Layer300,
   Layer400,
@@ -26,7 +27,6 @@ import {
   Target,
   TargetingItem,
 } from './components/';
-import { IsStairs } from './components/Status';
 import {
   Being,
   Floor,

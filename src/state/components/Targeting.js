@@ -1,4 +1,5 @@
 import { Component } from 'geotic';
+import { getEntityRef, setEntityRef } from '../../utils/ecs-refs';
 
 export class RequiresTarget extends Component {
   static properties = {
