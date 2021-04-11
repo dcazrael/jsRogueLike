@@ -1,4 +1,4 @@
-import { last } from 'lodash';
+import last from 'lodash/last';
 import { gameState } from '..';
 import { clearCanvas, drawCell } from '../lib/canvas';
 import { Animate } from '../state/components/';

@@ -4,10 +4,11 @@ import { Layer300, Layer400 } from './Layers';
 import { IsBlocking, IsDead } from './Status';
 
 export class Defense extends Component {
-  static properties = { max: 1, current: 1 };
+  static properties = { base: 1, current: 1 };
 }
+
 export class Health extends Component {
-  static properties = { max: 10, current: 10 };
+  static properties = { base: 10, current: 10 };
 
   onTakeDamage(evt) {
     this.current -= evt.data.amount;
@@ -19,16 +20,18 @@ export class Health extends Component {
       if (this.entity.has(IsBlocking)) {
         this.entity.remove(this.entity.isBlocking);
       }
-      this.entity.add(IsDead);
       if (this.entity.has(Layer400)) {
         this.entity.remove(this.entity.layer400);
       }
+
+      this.entity.add(IsDead);
       this.entity.add(Layer300);
       this.entity.appearance.char = '%';
     }
     evt.handle();
   }
 }
+
 export class Power extends Component {
-  static properties = { max: 5, current: 5 };
+  static properties = { base: 5, current: 5 };
 }

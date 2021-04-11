@@ -25,9 +25,11 @@ export class Inventory extends Component {
     this.inventoryItemIds = this.inventoryItemIds.filter(
       (itemId) => itemId !== evt.data.id
     );
+    console.log(evt);
     evt.data.add(Position, {
       x: this.entity.position.x,
       y: this.entity.position.y,
+      z: this.entity.position.z,
     });
     evt.data.add(IsPickup);
   }

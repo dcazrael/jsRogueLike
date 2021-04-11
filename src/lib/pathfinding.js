@@ -1,4 +1,5 @@
-import { some, times } from 'lodash';
+import some from 'lodash/some';
+import times from 'lodash/times';
 import PF from 'pathfinding';
 import { readCache, readCacheSet } from '../state/cache';
 import world from '../state/ecs';

@@ -1,7 +1,8 @@
-import { get, sample, times } from 'lodash';
+import get from 'lodash/get';
+import sample from 'lodash/sample';
 import './lib/canvas';
-import { grid, pxToCell } from './lib/canvas';
-import { createDungeon } from './lib/dungeon';
+import { pxToCell } from './lib/canvas';
+import { createDungeonLevel, getOpenTiles } from './lib/dungeon';
 import { circle, toCell, toLocId } from './lib/grid';
 import {
   addCache,
@@ -14,7 +15,10 @@ import {
 import {
   ActiveEffects,
   Ai,
+  Dropped,
   Effects,
+  IsDead,
+  IsEquipped,
   IsInFov,
   Move,
   Position,
@@ -25,6 +29,7 @@ import world from './state/ecs';
 import { ai } from './systems/ai';
 import { animation } from './systems/animation';
 import { effects } from './systems/effects';
+import { equipItem, unequipItem } from './systems/equip';
 import { fov } from './systems/fov';
 import { movement } from './systems/movement';
 import { render } from './systems/render';
@@ -35,69 +40,68 @@ export const addLog = (text) => {
   messageLog.unshift(text);
 };
 
+const saveGame = () => {
+  const gameSaveData = {
+    world: world.serialize(),
+    cache: serializeCache(),
+    playerId: player.id,
+    messageLog,
+  };
+  localStorage.setItem('gameSaveData', JSON.stringify(gameSaveData));
+  addLog('Game saved');
+};
+
+const loadGame = () => {
+  const data = JSON.parse(localStorage.getItem('gameSaveData'));
+  if (!data) {
+    addLog('Failed to load - no saved games found');
+    return;
+  }
+
+  for (let entity of world.getEntities()) {
+    entity.destroy();
+  }
+  clearCache();
+
+  world.deserialize(data.world);
+  deserializeCache(data.cache);
+
+  player = world.getEntity(data.playerId);
+
+  userInput = null;
+  playerTurn = true;
+  gameState = 'GAME';
+  selectedInventoryIndex = 0;
+
+  messageLog = data.messageLog;
+  addLog('Game loaded');
+};
+
+const newGame = () => {
+  for (let item of world.getEntities()) {
+    item.destroy();
+  }
+  clearCache();
+
+  userInput = null;
+  playerTurn = true;
+  gameState = 'GAME';
+  selectedInventoryIndex = 0;
+
+  messageLog = ['', "Welcome to Gobs 'O Goblins!", ''];
+
+  initGame();
+};
+
 const enemiesInFOV = world.createQuery({ all: [IsInFov, Ai] });
-
-const getOpenTiles = (dungeon) => {
-  const openTiles = Object.values(dungeon.tiles).filter(
-    (x) => x.sprite === 'FLOOR'
-  );
-  return sample(openTiles);
-};
-
-const createDungeonLevel = ({
-  createStairsUp = true,
-  createStairsDown = true,
-} = {}) => {
-  const dungeon = createDungeon({
-    x: grid.map.x,
-    y: grid.map.y,
-    z: readCache('z'),
-    width: grid.map.width,
-    height: grid.map.height,
-  });
-
-  times(10, () => {
-    world.createPrefab('Goblin').add(Position, getOpenTiles(dungeon));
-  });
-
-  times(10, () => {
-    world.createPrefab('HealthPotion').add(Position, getOpenTiles(dungeon));
-  });
-
-  times(10, () => {
-    world.createPrefab('ScrollLightning').add(Position, getOpenTiles(dungeon));
-  });
-
-  times(10, () => {
-    world.createPrefab('ScrollParalyze').add(Position, getOpenTiles(dungeon));
-  });
-
-  times(10, () => {
-    world.createPrefab('ScrollFireball').add(Position, getOpenTiles(dungeon));
-  });
-
-  let stairsUp, stairsDown;
-
-  if (createStairsUp) {
-    times(1, () => {
-      stairsUp = world.createPrefab('StairsUp');
-      stairsUp.add(Position, getOpenTiles(dungeon));
-    });
-  }
-
-  if (createStairsDown) {
-    times(1, () => {
-      stairsDown = world.createPrefab('StairsDown');
-      stairsDown.add(Position, getOpenTiles(dungeon));
-    });
-  }
-
-  return { dungeon, stairsUp, stairsDown };
-};
 
 export const goToDungeonLevel = (level) => {
   const goingUp = readCache('z') < level;
   const floor = readCache('floors')[level];
+
+  const deadEntities = world.createQuery({ all: [IsDead] }).get();
+
+  deadEntities.forEach((deadEntity) => deadEntity.destroy());
 
   addCache('z', level);
   player.remove(player.position);
@@ -126,7 +130,7 @@ const initGame = () => {
     createStairsUp: false,
   });
 
-  player = world.createPrefab('Player');
+  player = world.createPrefab('Player', { health: { base: 20, current: 20 } });
 
   addCache(`floors.${-1}`, {
     stairsDown: toLocId(stairsDown.position),
@@ -140,7 +144,6 @@ const initGame = () => {
   render(player);
 };
 
-// game variables
 let player = {};
 let userInput = null;
 let playerTurn = true;
@@ -148,7 +151,6 @@ export let gameState = 'GAME';
 export let targetRange = 1;
 export let selectedInventoryIndex = 0;
 
-// start game
 initGame();
 
 document.addEventListener('keydown', (ev) => {
@@ -171,6 +173,34 @@ const processUserInput = () => {
   }
 
   if (gameState === 'GAME') {
+    if (userInput === '>') {
+      if (
+        toLocId(player.position) !==
+        readCache(`floors.${readCache('z')}.stairsDown`)
+      ) {
+        addLog('There are no stairs here to descend');
+
+        userInput = null;
+        return;
+      }
+      addLog('You descend deeper into the dungeon');
+      goToDungeonLevel(readCache('z') - 1);
+    }
+
+    if (userInput === '<') {
+      if (
+        toLocId(player.position) !==
+        readCache(`floors.${readCache('z')}.stairsUp`)
+      ) {
+        addLog('There are no stairs here to climb');
+
+        userInput = null;
+        return;
+      }
+      addLog('You climb from the depths of the dungeon');
+      goToDungeonLevel(readCache('z') + 1);
+    }
+
     if (userInput === 'ArrowUp') {
       player.add(Move, { x: 0, y: -1, z: readCache('z') });
     }
@@ -193,6 +223,9 @@ const processUserInput = () => {
             pickupFound = true;
             player.fireEvent('pick-up', entity);
             addLog(`You pick up a ${entity.description.name}`);
+            if (entity.has(Dropped)) {
+              entity.remove(entity.dropped);
+            }
           }
         }
       );
@@ -205,11 +238,15 @@ const processUserInput = () => {
       gameState = 'INVENTORY';
     }
 
+    if (userInput === 'z') {
+      gameState = 'TARGETING';
+    }
+
     userInput = null;
   }
 
   if (gameState === 'TARGETING') {
-    if (userInput === 'Escape') {
+    if (userInput === 'z' || userInput === 'Escape') {
       player.remove(player.targetingItem);
       gameState = 'GAME';
     }
@@ -262,6 +299,8 @@ const processUserInput = () => {
           );
           addLog(`You consume a ${entity.description.name}`);
           player.fireEvent('consume', entity);
+        } else {
+          addLog(`You can't consume ${entity.description.name}`);
         }
       }
       selectedInventoryIndex = 0;
@@ -272,7 +311,29 @@ const processUserInput = () => {
       if (player.inventory.inventoryItems.length) {
         const entity = player.inventory.inventoryItems[selectedInventoryIndex];
         addLog(`You drop a ${entity.description.name}`);
+        entity.add(Dropped);
         player.fireEvent('drop', entity);
+        if (entity.has(IsEquipped)) {
+          unequipItem(entity, player);
+        }
+      }
+    }
+
+    if (userInput === 'e') {
+      const entity = player.inventory.inventoryItems[selectedInventoryIndex];
+
+      if (entity) {
+        if (entity.isEquippable) {
+          if (!entity.has(IsEquipped)) {
+            equipItem(entity, player);
+          } else {
+            unequipItem(entity, player);
+          }
+        }
+
+        selectedInventoryIndex = 0;
+
+        gameState = 'GAME';
       }
     }
 
@@ -343,6 +404,8 @@ canvas.onclick = (e) => {
   const [x, y] = pxToCell(e);
   const locId = toLocId({ x, y, z: readCache('z') });
 
+  if (!readCacheSet('entitiesAtLocation', locId)) return;
+
   readCacheSet('entitiesAtLocation', locId).forEach((eId) => {
     const entity = world.getEntity(eId);
 
@@ -374,60 +437,4 @@ canvas.onclick = (e) => {
       render(player);
     }
   });
-};
-
-const saveGame = () => {
-  const gameSaveData = {
-    world: world.serialize(),
-    cache: serializeCache(),
-    playerId: player.id,
-    messageLog,
-  };
-
-  localStorage.setItem('gameSaveData', JSON.stringify(gameSaveData));
-  addLog('Game saved');
-};
-
-const loadGame = () => {
-  const data = JSON.parse(localStorage.getItem('gameSaveData'));
-  if (!data) {
-    addLog('Failed to load = no saved games found');
-    return;
-  }
-
-  for (let entity of world.getEntities()) {
-    entity.destroy();
-  }
-
-  clearCache();
-
-  world.deserialize(data.world);
-  deserializeCache(data.cache);
-
-  player = world.getEntity(data.playerId);
-
-  userInput = null;
-  playerTurn = true;
-  gameState = 'GAME';
-  selectedInventoryIndex = 0;
-
-  messageLog = data.messageLog;
-  addLog('Game loaded');
-};
-
-const newGame = () => {
-  for (let item of world.getEntities()) {
-    item.destroy();
-  }
-
-  clearCache();
-
-  userInput = null;
-  playerTurn = true;
-  gameState = 'GAME';
-  selectedInventoryIndex = 0;
-
-  messageLog = ['', "Welcome to Gobs 'O Goblins!", ''];
-
-  initGame();
 };

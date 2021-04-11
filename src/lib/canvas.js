@@ -6,7 +6,7 @@ const ctx = canvas.getContext('2d');
 
 export const grid = {
   width: 100,
-  height: 34,
+  height: 35,
 
   map: {
     width: 79,
@@ -24,9 +24,28 @@ export const grid = {
 
   playerHud: {
     width: 20,
-    height: 34,
+    height: 6,
     x: 0,
     y: 0,
+  },
+
+  playerEquipment: {
+    width: 20,
+    height: 13,
+    x: 0,
+    y: 7,
+    head: { x: 5, y: 7 },
+    weapon: { x: 1, y: 11 },
+    chest: { x: 5, y: 11 },
+    shield: { x: 9, y: 11 },
+    legs: { x: 5, y: 15 },
+  },
+
+  equipmentInfo: {
+    width: 20,
+    height: 7,
+    x: 0,
+    y: 20,
   },
 
   infoBar: {
@@ -35,13 +54,20 @@ export const grid = {
     x: 21,
     y: 32,
   },
+
   inventory: {
     width: 37,
     height: 28,
     x: 21,
     y: 4,
   },
-  menu: { width: 100, height: 1, x: 0, y: 33 },
+
+  menu: {
+    width: 100,
+    height: 1,
+    x: 0,
+    y: 33,
+  },
 };
 
 const lineHeight = 1.2;
@@ -60,15 +86,6 @@ canvas.height = cellHeight * grid.height;
 ctx.font = `normal ${fontSize}px 'Fira Code'`;
 ctx.textAlign = 'center';
 ctx.textBaseline = 'middle';
-
-export const drawChar = ({ char, color, position }) => {
-  ctx.fillStyle = color;
-  ctx.fillText(
-    char,
-    position.x * cellWidth + cellWidth / 2,
-    position.y * cellHeight + cellHeight / 2
-  );
-};
 
 export const clearCanvas = (x, y, w, h) => {
   const posX = x * cellWidth;
@@ -93,6 +110,14 @@ const drawBackground = ({ color, position }) => {
   );
 };
 
+export const drawChar = ({ char, color, position }) => {
+  ctx.fillStyle = color;
+  ctx.fillText(
+    char,
+    position.x * cellWidth + cellWidth / 2,
+    position.y * cellHeight + cellHeight / 2
+  );
+};
 export const drawCell = (entity, options = {}) => {
   const char = options.char || entity.appearance.char;
   const background = options.background || entity.appearance.background;
@@ -101,48 +126,6 @@ export const drawCell = (entity, options = {}) => {
 
   drawBackground({ color: background, position });
   drawChar({ char, color, position });
-};
-
-export const pxToCell = (ev) => {
-  const bounds = canvas.getBoundingClientRect();
-  const relativeX = ev.clientX - bounds.left;
-  const relativeY = ev.clientY - bounds.top;
-  const colPos = Math.trunc((relativeX / cellWidth) * pixelRatio);
-  const rowPos = Math.trunc((relativeY / cellHeight) * pixelRatio);
-
-  return [colPos, rowPos];
-};
-
-export const drawText = (template) => {
-  const textToRender = template.text;
-
-  textToRender.split('').forEach((char, index) => {
-    const options = { ...template };
-    const character = {
-      appearance: {
-        char,
-        background: options.background,
-        color: options.color,
-      },
-      position: {
-        x: index + options.x,
-        y: options.y,
-      },
-    };
-
-    delete options.x;
-    delete options.y;
-
-    drawCell(character, options);
-  });
-};
-
-export const drawRect = (x, y, width, height, color) => {
-  const rect = rectangle({ x, y, width, height });
-
-  Object.values(rect.tiles).forEach((position) => {
-    drawBackground({ color, position });
-  });
 };
 
 export const drawCircle = (x, y, radius) => {
@@ -158,4 +141,70 @@ export const drawCircle = (x, y, radius) => {
       position: { x, y },
     });
   });
+};
+
+export const drawImage = ({
+  x,
+  y,
+  width,
+  height,
+  image,
+  color = '#FFFFFF',
+}) => {
+  const img = new Image();
+
+  const coloredImage = image.replace(/#color/g, color);
+  img.src =
+    'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(coloredImage);
+
+  img.onload = () => {
+    ctx.drawImage(
+      img,
+      x * cellWidth + cellWidth / 2,
+      y * cellHeight + cellHeight / 2,
+      width * cellWidth + cellWidth / 2,
+      height * cellHeight
+    );
+  };
+};
+
+export const drawRect = (x, y, width, height, color) => {
+  const rect = rectangle({ x, y, width, height });
+
+  Object.values(rect.tiles).forEach((position) => {
+    drawBackground({ color, position });
+  });
+};
+
+export const drawText = (template) => {
+  const textToRender = template.text;
+
+  [...textToRender].forEach((char, index) => {
+    const options = { ...template };
+    const character = {
+      appearance: {
+        char,
+        background: options.background,
+        color: options.color,
+      },
+      position: {
+        x: index + options.x,
+        y: options.y,
+      },
+    };
+
+    delete options.x;
+    delete options.y;
+    drawCell(character, options);
+  });
+};
+
+export const pxToCell = (ev) => {
+  const bounds = canvas.getBoundingClientRect();
+  const relativeX = ev.clientX - bounds.left;
+  const relativeY = ev.clientY - bounds.top;
+  const colPos = Math.trunc((relativeX / cellWidth) * pixelRatio);
+  const rowPos = Math.trunc((relativeY / cellHeight) * pixelRatio);
+
+  return [colPos, rowPos];
 };

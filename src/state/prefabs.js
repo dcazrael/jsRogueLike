@@ -134,27 +134,13 @@ export const Player = {
   components: [
     {
       type: 'Appearance',
-      properties: {
-        char: '@',
-        color: '#FFF',
-      },
+      properties: { char: '@', color: '#FFF' },
     },
     {
       type: 'Description',
-      properties: {
-        name: 'You',
-      },
+      properties: { name: 'You' },
     },
-    {
-      type: 'Health',
-      properties: {
-        current: 20,
-        max: 20,
-      },
-    },
-    {
-      type: 'Inventory',
-    },
+    { type: 'Inventory' },
   ],
 };
 
@@ -162,27 +148,153 @@ export const Goblin = {
   name: 'Goblin',
   inherit: ['Being'],
   components: [
-    {
-      type: 'Ai',
-    },
+    { type: 'Ai' },
     {
       type: 'Appearance',
-      properties: {
-        char: 'g',
-        color: 'green',
-      },
+      properties: { char: 'g', color: 'green' },
     },
     {
       type: 'Description',
-      properties: {
-        name: 'goblin',
-      },
+      properties: { name: 'goblin' },
     },
+    { type: 'Power', properties: { base: 2, current: 2 } },
+    { type: 'Health', properties: { base: 7, current: 7 } },
+  ],
+};
+
+export const GoblinWarrior = {
+  name: 'GoblinWarrior',
+  inherit: ['Being'],
+  components: [
+    { type: 'Ai' },
+    {
+      type: 'Appearance',
+      properties: { char: 'w', color: 'green' },
+    },
+    {
+      type: 'Description',
+      properties: { name: 'goblin warrior' },
+    },
+    { type: 'Defense', properties: { base: 2, current: 2 } },
+    { type: 'Power', properties: { base: 4, current: 4 } },
   ],
 };
 // ---------- <Beings ---------- //
 
 // ---------- Items> ---------- //
+export const Gear = {
+  name: 'Gear',
+  inherit: ['Item'],
+  components: [{ type: 'IsEquippable' }],
+};
+
+// Complex
+export const Weapon = {
+  name: 'Weapon',
+  inherit: ['Gear'],
+  components: [
+    { type: 'Appearance', properties: { char: '⚔', color: '#0066ff' } },
+
+    {
+      type: 'Description',
+      properties: { name: 'weapon' },
+    },
+    {
+      type: 'Slot',
+      properties: {
+        name: 'weapon',
+      },
+    },
+    {
+      type: 'EquipmentEffect',
+      properties: {
+        component: 'power',
+        delta: 1,
+      },
+    },
+  ],
+};
+
+export const Armor = {
+  name: 'Armor',
+  inherit: ['Gear'],
+  components: [
+    { type: 'Appearance', properties: { char: '🛡', color: '#ff99ff' } },
+
+    {
+      type: 'Description',
+      properties: { name: 'armor piece' },
+    },
+  ],
+};
+
+export const Chest = {
+  name: 'Chest',
+  inherit: ['Armor'],
+  components: [
+    {
+      type: 'Description',
+      properties: { name: 'chest piece' },
+    },
+    {
+      type: 'Slot',
+      properties: {
+        name: 'chest',
+      },
+    },
+  ],
+};
+
+export const Helmet = {
+  name: 'Helmet',
+  inherit: ['Armor'],
+  components: [
+    {
+      type: 'Description',
+      properties: { name: 'helmet' },
+    },
+    {
+      type: 'Slot',
+      properties: {
+        name: 'head',
+      },
+    },
+  ],
+};
+
+export const Shield = {
+  name: 'Shield',
+  inherit: ['Armor'],
+  components: [
+    {
+      type: 'Description',
+      properties: { name: 'shield' },
+    },
+    {
+      type: 'Slot',
+      properties: {
+        name: 'shield',
+      },
+    },
+  ],
+};
+
+export const Boots = {
+  name: 'Boots',
+  inherit: ['Armor'],
+  components: [
+    {
+      type: 'Description',
+      properties: { name: 'boots' },
+    },
+    {
+      type: 'Slot',
+      properties: {
+        name: 'legs',
+      },
+    },
+  ],
+};
 export const HealthPotion = {
   name: 'HealthPotion',
   inherit: ['Item'],

@@ -1,6 +1,6 @@
-import { addLog, goToDungeonLevel } from '..';
+import { addLog } from '..';
 import { grid } from '../lib/canvas';
-import { readCache, readCacheSet } from '../state/cache';
+import { readCacheSet } from '../state/cache';
 import {
   Defense,
   Health,
@@ -15,8 +15,12 @@ const movableEntities = world.createQuery({
 });
 
 const attack = (entity, target) => {
-  const damage = entity.power.current - target.defense.current;
-  target.fireEvent('take-damage', { amount: damage });
+  let damage = entity.power.current - target.defense.current;
+  if (damage > 0) {
+    target.fireEvent('take-damage', { amount: damage });
+  } else {
+    damage = 0;
+  }
 
   if (target.health.current <= 0) {
     return addLog(
@@ -50,6 +54,7 @@ export const movement = () => {
     // check for blockers
     const blockers = [];
     const stairs = [];
+
     const entitiesAtLocation = readCacheSet(
       'entitiesAtLocation',
       `${mx},${my},${mz}`
@@ -58,9 +63,6 @@ export const movement = () => {
     for (const eId of entitiesAtLocation) {
       if (world.getEntity(eId).isBlocking) {
         blockers.push(eId);
-      }
-      if (world.getEntity(eId).isStairs) {
-        stairs.push(eId);
       }
     }
 
@@ -76,21 +78,6 @@ export const movement = () => {
         }
       });
       entity.remove(entity.move);
-      return;
-    }
-
-    if (stairs.length) {
-      stairs.forEach((eId) => {
-        const target = world.getEntity(eId);
-        if (target.appearance.char === '>') {
-          addLog('You descend deeper into the dungeon');
-          goToDungeonLevel(readCache('z') - 1);
-        }
-        if (target.appearance.char === '<') {
-          addLog('You climb from the depths of the dungeon');
-          goToDungeonLevel(readCache('z') + 1);
-        }
-      });
       return;
     }
 

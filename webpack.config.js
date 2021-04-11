@@ -1,40 +1,40 @@
-const path = require("path");
-const { CleanWebpackPlugin } = require("clean-webpack-plugin");
-const HtmlWebpackPlugin = require("html-webpack-plugin");
-const GitRevisionPlugin = require("git-revision-webpack-plugin");
-const TerserPlugin = require("terser-webpack-plugin");
+const path = require('path');
+const { CleanWebpackPlugin } = require('clean-webpack-plugin');
+const HtmlWebpackPlugin = require('html-webpack-plugin');
+const GitRevisionPlugin = require('git-revision-webpack-plugin');
+const TerserPlugin = require('terser-webpack-plugin');
 
 const gitRevisionPlugin = new GitRevisionPlugin();
 
 const mode = () => {
-  if (process.env.NODE_ENV === "development") {
-    return { mode: "development" };
+  if (process.env.NODE_ENV === 'development') {
+    return { mode: 'development' };
   }
 
-  if (process.env.NODE_ENV === "production") {
-    return { mode: "production" };
+  if (process.env.NODE_ENV === 'production') {
+    return { mode: 'production' };
   }
 
   return {};
 };
 
 const devtool = () => {
-  if (process.env.NODE_ENV === "development") {
-    return { devtool: "inline-source-map" };
+  if (process.env.NODE_ENV === 'development') {
+    return { devtool: 'inline-source-map' };
   }
 
-  if (process.env.NODE_ENV === "production") {
-    return { devtool: "source-map" };
+  if (process.env.NODE_ENV === 'production') {
+    return { devtool: 'source-map' };
   }
 
   return {};
 };
 
 const devServer = () => {
-  if (process.env.NODE_ENV === "development") {
+  if (process.env.NODE_ENV === 'development') {
     return {
       devServer: {
-        contentBase: "./dist",
+        contentBase: './dist',
         open: false,
       },
     };
@@ -61,19 +61,19 @@ module.exports = {
     ],
   },
 
-  entry: "./src/index.js",
+  entry: './src/index.js',
 
   plugins: [
     new CleanWebpackPlugin({ cleanStaleWebpackAssets: false }),
     new HtmlWebpackPlugin({
-      title: "jsrlt",
-      template: "index.html",
+      title: 'JavaScript Roguelike',
+      template: 'index.html',
       version: gitRevisionPlugin.commithash().slice(0, 7),
     }),
   ],
   output: {
-    filename: "[name].[contenthash].js",
-    path: path.resolve(__dirname, "dist"),
+    filename: '[name].[contenthash].js',
+    path: path.resolve(__dirname, 'dist'),
   },
 
   module: {
@@ -82,7 +82,7 @@ module.exports = {
         test: /\.(png|jpe?g|gif)$/i,
         use: [
           {
-            loader: "file-loader",
+            loader: 'file-loader',
           },
         ],
       },
@@ -90,12 +90,12 @@ module.exports = {
         test: /\.m?js$/,
         exclude: /(node_modules)\/(?!geotic)/,
         use: {
-          loader: "babel-loader",
+          loader: 'babel-loader',
           options: {
-            presets: ["@babel/preset-env"],
+            presets: ['@babel/preset-env'],
             plugins: [
-              "@babel/plugin-proposal-class-properties",
-              "@babel/plugin-proposal-private-methods",
+              '@babel/plugin-proposal-class-properties',
+              '@babel/plugin-proposal-private-methods',
             ],
           },
         },
