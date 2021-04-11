@@ -1,5 +1,6 @@
 import get from 'lodash/get';
 import sample from 'lodash/sample';
+import Favicon from './images/favicon.png';
 import './lib/canvas';
 import { pxToCell } from './lib/canvas';
 import { createDungeonLevel, getOpenTiles } from './lib/dungeon';
@@ -34,6 +35,15 @@ import { fov } from './systems/fov';
 import { movement } from './systems/movement';
 import { render } from './systems/render';
 import { targeting } from './systems/targeting';
+
+if (!document.getElementById('favicon')) {
+  const favicon = document.createElement('link');
+  favicon.id = 'favicon';
+  favicon.rel = 'icon';
+  favicon.href = Favicon;
+
+  document.head.appendChild(favicon);
+}
 
 export let messageLog = ['', "Welcome to Gobs 'O Goblins!", ''];
 export const addLog = (text) => {

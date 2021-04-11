@@ -1,3 +1,6 @@
+Play game in [Browser](https://dcazrael.github.io/jsRogueLike/)
+Build a similar game like this by following the [tutorial](https://github.com/dcazrael/jsrlt)
+
 ## Scripts
 
 `npm start` Run the app local with webpack dev server on port 8080.
